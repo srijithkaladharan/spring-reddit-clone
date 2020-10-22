@@ -1,5 +1,6 @@
 package com.srijith.redditclone.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -13,7 +14,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import java.time.Instant;
 
-import static javax.persistence.GenerationType.SEQUENCE;
+import static javax.persistence.GenerationType.IDENTITY;
 
 @Data
 @AllArgsConstructor
@@ -22,9 +23,10 @@ import static javax.persistence.GenerationType.SEQUENCE;
 public class User {
 
 	@Id
-	@GeneratedValue(strategy = SEQUENCE)
+	@GeneratedValue(strategy = IDENTITY)
 	private Long userId;
 	@NotBlank(message = "Username is required")
+	@Column(name="username")
 	private String username;
 	@NotBlank(message = "Password is required")
 	private String password;
