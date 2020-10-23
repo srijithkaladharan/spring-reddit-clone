@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.srijith.redditclone.dto.AuthenticationResponse;
 import com.srijith.redditclone.dto.LoginRequest;
+import com.srijith.redditclone.dto.RefreshTokenRequest;
 import com.srijith.redditclone.dto.RegisterRequest;
 import com.srijith.redditclone.exceptions.SpringRedditException;
 import com.srijith.redditclone.model.NotificationEmail;
@@ -36,6 +37,7 @@ public class AuthService {
 	private final MailService mailService;
 	private final AuthenticationManager authenticationManager;
 	private final JwtProvider jwtProvider;
+	private final RefreshTokenService refreshTokenService;
 	
 	@Transactional
 	public void signup(RegisterRequest registerRequest) {
@@ -94,7 +96,12 @@ public class AuthService {
 		
 		String token = jwtProvider.generateToken(authenticate);
 		
-		return new AuthenticationResponse(token, loginRequest.getUsername());
+		return AuthenticationResponse.builder()
+				.authenticationToken(token)
+				.refreshToken(refreshTokenService.generateRefreshToken().getToken())
+				.expiresAt(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()).toString())
+				.username(loginRequest.getUsername())
+				.build();
 	}
 	
 	@Transactional(readOnly = true)
@@ -104,4 +111,16 @@ public class AuthService {
         return userRepository.findByUsername(principal.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User name not found - " + principal.getUsername()));
     }
+	
+	public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+		refreshTokenService.validateRefreshToken(refreshTokenRequest.getRefreshToken());
+		String token = jwtProvider.generateTokenWithUsername(refreshTokenRequest.getUsername());
+		
+		return AuthenticationResponse.builder()
+				.authenticationToken(token)
+				.refreshToken("")
+				.expiresAt(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()).toString())
+				.username(refreshTokenRequest.getUsername())
+				.build();
+	}
 }
