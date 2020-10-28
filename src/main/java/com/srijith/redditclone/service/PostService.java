@@ -20,17 +20,13 @@ import com.srijith.redditclone.repository.SubredditRepository;
 import com.srijith.redditclone.repository.UserRepository;
 
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.stream.Collectors.toList;
 
 
 @Service
 @AllArgsConstructor
-@Slf4j
 public class PostService {
 	
 	private final SubredditRepository subredditRepository;
@@ -45,9 +41,6 @@ public class PostService {
 			.orElseThrow(() -> new SpringRedditException(postRequest.getSubredditName()));
 		
 		User currentUser = authService.getCurrentUser();
-		
-		Logger logger = LoggerFactory.getLogger(PostService.class);
-		logger.info(currentUser.toString());
 		postRepository.save(postMapper.map(postRequest, subreddit, currentUser));
 	}
 	
@@ -55,7 +48,7 @@ public class PostService {
 	@Transactional(readOnly = true)
 	public PostResponse getPost(Long id) {
 		Post post = postRepository.findById(id)
-			.orElseThrow(() -> new PostNotFoundException(id.toString()));
+			.orElseThrow(() -> new PostNotFoundException("Post not found!!"));
 		
 		return postMapper.mapToDto(post);
 	}
@@ -74,8 +67,7 @@ public class PostService {
 				.orElseThrow(() -> new SubredditNotFoundException(subredditId.toString()));
 		
 		List<Post> posts = postRepository.findAllBySubreddit(subreddit);
-		Logger logger = LoggerFactory.getLogger(PostService.class);
-		logger.info(posts.toString());
+		
 		
 		return posts
 				.stream()

@@ -10,19 +10,22 @@ import com.srijith.redditclone.dto.PostResponse;
 import com.srijith.redditclone.model.Post;
 import com.srijith.redditclone.model.Subreddit;
 import com.srijith.redditclone.model.User;
+import com.srijith.redditclone.model.Vote;
 import com.srijith.redditclone.repository.CommentRepository;
 import com.srijith.redditclone.repository.VoteRepository;
 import com.srijith.redditclone.service.AuthService;
+
+import com.srijith.redditclone.model.VoteType;
 
 @Mapper(componentModel="spring")
 public abstract class PostMapper {
 	
 	@Autowired
 	private CommentRepository commentRepository;
-//	@Autowired
-//	private VoteRepository voteRepository;
-//	@Autowired
-//	private AuthService authService;
+	@Autowired
+	private VoteRepository voteRepository;
+	@Autowired
+	private AuthService authService;
 
 	
 	@Mapping(target = "createdDate", expression = "java(java.time.Instant.now())")
@@ -38,6 +41,8 @@ public abstract class PostMapper {
 	@Mapping(target = "username", source="user.username")
 	@Mapping(target = "commentCount", expression="java(commentCount(post))")
 	@Mapping(target = "duration", expression="java(getDuration(post))")
+	@Mapping(target = "upVote", expression="java(isPostUpVoted(post))")
+	@Mapping(target = "downVote", expression="java(isPostDownVoted(post))")
 	public abstract PostResponse mapToDto(Post post); 
 	
 	Integer commentCount(Post post) {
@@ -47,5 +52,23 @@ public abstract class PostMapper {
 	String getDuration(Post post) {
 		return TimeAgo.using(post.getCreatedDate().toEpochMilli());
 	}
+	
+	boolean isPostUpVoted(Post post) {
+		return checkVoteType(post, VoteType.UPVOTE);
+	}
+	
+	boolean isPostDownVoted(Post post) {
+		return checkVoteType(post, VoteType.DOWNVOTE);
+	}
+	
+	private boolean checkVoteType(Post post, VoteType voteType) {
+		if (authService.isLoggedIn()) {
+			java.util.Optional<Vote> voteForPostByUser = voteRepository.findTopByPostAndUserOrderByVoteIdDesc(post, authService.getCurrentUser());
+			return voteForPostByUser.filter(vote -> vote.getVotetype().equals(voteType)).isPresent();
+		}
+		
+		return false;
+	}
+	
 	
 }

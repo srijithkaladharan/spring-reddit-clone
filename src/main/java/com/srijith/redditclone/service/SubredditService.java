@@ -12,13 +12,12 @@ import com.srijith.redditclone.model.Subreddit;
 import com.srijith.redditclone.repository.SubredditRepository;
 
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 
 import static java.util.stream.Collectors.toList;
 
 @Service
 @AllArgsConstructor
-@Slf4j
 public class SubredditService {
 	
 	private final SubredditRepository subredditRepository;
